@@ -1,9 +1,9 @@
 # Lista de Tarefas: mini-curso _bash_ SDC-CI 2018
 
-- Baixar o arquivo `.gz` do curso do Github usando `curl` (ou `wget`) 
-(_Obs:_ n„o introduzir `git clone` ainda) 
-- Descomprimir usando `tar -xv`
 
+## Obtendo o diretório padrão 
+
+- Baixar o arquivo `.zip` do curso do [Github](https://github.com/gcpeixoto/sdc-mc)
 
 ## Exercícios 
 
