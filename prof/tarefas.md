@@ -444,9 +444,16 @@ $ ps -ax | tee misc/procs.txt | more
 ```bash
 $ cd ~/sdc
 $ echo "alias sdc='cd $PWD'" >> ~/.bashrc
+$ source ~/.bashrc
 ```
 
-**Obs.:** agora temos um atalho que já nos levará diretamente para o nosso diretório padrão, pois embutimos o comando `cd` nele. A partir de agora a variável de ambiente `sdc` pode ser descartada. 
+**Obs.:** agora temos um atalho que já nos levará diretamente para o nosso diretório padrão, pois embutimos o comando `cd` nele. A partir de agora, vamos adicionar a variável de ambiente `DIR_SDC` para o caminho do diretório e deixar `sdc` como um 'alias' para o abrir o diretório. 
+
+```bash
+$ sdc
+$ echo "export DIR_SDC=$PWD'" >> ~/.bashrc
+$ source ~/.bashrc
+```
 
 ##### Descritores de arquivos 
 
@@ -462,7 +469,7 @@ Vamos estudar os fluxos de um processo `ls` para entender como  manipulamos redi
 - Executar comando que produz mensagem na saída padrão: 
 
 ```bash
-$ cd sdc; ls temp/bett temp/buch
+$ sdc; ls temp/bett temp/buch
 ```
 
 **Obs.:** ambos os arquivos `bett` e `buch` estão no diretório, de modo que `ls` produz uma saída para a tela em FD1.
@@ -470,7 +477,7 @@ $ cd sdc; ls temp/bett temp/buch
 - Executar comando que produz mensagem de erro padrão:
 
 ```bash
-$ cd sdc; ls temp/but
+$ sdc; ls temp/but
 ls: temp/but: No such file or directory  
 ```
 **Obs.:** neste caso, `but` não existe. Portanto, o processo `ls` produz uma mensagem de erro padrão na tela em FD2.
@@ -653,4 +660,496 @@ $ chmod +x /temp/sh/s2
 $ bash /temp/sh/s2 # outra forma de executar, em vez de ./
 ```
 
-**Obs.:** o operador `[[ ]]` é uma construção para testes lógicos, assim como `=` também tem o mesmo sentido conhecido.
+**Obs.:** `[[ ]]` é uma construção para testes lógicos. É uma _keyword_, e não um comando.
+
+
+- Vamos criar outro script, agora com extensão, a saber `/temp/sh/s3.sh`: 
+
+```bash
+$ touch temp/sh/s3.sh; nano temp/sh/s3.sh;
+:<<S3
+Script s3.sh
+Aplica 'if' com variáveis globais 
+S3
+#!/bin/bash
+DIR=$DIR_SDC/temp 
+FILE=fluss.rb # escolhendo arquivo
+
+if mv $DIR/$FILE ~/.Trash/; 
+	then echo "$FILE movido para a lixeira."
+elif 
+	rm $DIR/$FILE; 
+	then echo "$FILE deletado."
+else 
+	echo "$FILE não removido" >&2; 
+	exit 1; 
+fi
+
+# executa
+$ chmod +x temp/sh/s3.sh
+$ ./temp/sh/s3.sh
+
+# verifica 
+$ ls ~/.Trash | grep fluss
+```
+
+- Vamos criar um script `temp/sh/s4.sh`, similar a `s3.sh`, mas com passagem de argumento. 
+
+```bash
+$ ditto temp/sh/s3.sh temp/sh/s4.sh; 
+$ nano temp/sh/s4.sh
+
+:<<S4
+Script s4.sh
+Aplica 'if' com variáveis globais e passagem 
+de parâmetro na linha de comando
+S4
+#!/bin/bash
+DIR=$DIR_SDC/temp 
+
+if mv $DIR/$1 ~/.Trash/; 
+	then echo "$1 movido para a lixeira."
+elif 
+	rm $DIR/$FILE; 
+	then echo "$1 deletado."
+else 
+	echo "$FILE não removido" >&2; 
+	exit 1; 
+fi
+$ chmod +x temp/sh/s3.sh
+
+# vamos recriar fluss.rb e executar
+$ touch /temp/fluss.rb 
+$ ./temp/sh/s4.sh fluss.rb
+```
+
+**Obs.:** um `if` pode testar qualquer comando; não apenas condições entre colchetes.
+
+##### Status de saída 
+
+- Vamos entender um pouco sobre status de saída.
+
+```bash
+$ echo ola
+$ echo $? 
+# Estado 0 retornado porque o comando 
+# foi executado com sucesso.
+
+$ lskdf 
+$ echo $? 
+# Estado de saída não-zero retornado 
+# porque o comando falhou ao executar. 
+# 'lskdf' não é reconhecido pelo bash. 
+# '127' é associado ao erro "command not found"
+
+:<<STATUS 
+Por convenção, uma saída '0' indica sucesso.
+Um valor de saída diferente de zero significa 
+erro ou condição anômala.
+STATUS
+```
+
+#### `true` e `false`
+
+```bash
+$ true
+$ echo $?
+# 0
+
+$ false 
+$ echo $?
+# 1
+
+# negaçao 
+$ ! true 
+$ echo $?
+# 1
+
+# Nota: 
+# "!" precisa de um espaço entre ele e o comando.
+# '!true' leva a erro de "comando não encontrado"
+# '!' sem espaço é o operador que invoca o 
+#     mecanismo do histórico do Bash.
+$ true
+$ !true
+# Aqui não há erro, mas também não há negação.
+# Simplesmente repetição do comando anterior (true).
+
+```
+
+- Vamos criar outro script com testes lógicos mais "explícitos": 
+
+```bash
+$ ditto temp/sh/s5.sh
+$ nano temp/sh/s4.sh
+:<<S5
+Script s5.sh 
+Realiza vários testes lógicos
+S5
+#!/bin/bash
+# ---
+# Lógico E
+
+(( 0 && 1 ))
+echo $?   
+# 1
+
+let "num = (( 0 && 1 ))"
+echo $num 	
+# 0
+
+let "num = (( 0 && 1 ))"
+echo $? 
+# 1
+
+# o status de saída de uma 
+# operação aritmética não é um valor de erro
+var=-2 && (( var+=2 ))
+echo $?
+# 1
+
+# ---
+
+# Lógico OU
+# ---
+
+(( 200 || 11 ))              
+echo $? 
+# 0
+
+let "num = (( 200 || 11 ))"
+echo $num  
+# 1 
+
+let "num = (( 200 || 11 ))"
+echo $?     
+# 0
+```
+
+**Obs.:** `$?` lê o status de saída do último comando. O comando `let` executa operações aritméticas sobre variáveis e é uma versão menos complexa de `exec`. Ambas as construções `((...))` e `let` retornam um status de saída, de acordo com as expressões aritméticas que avaliam, se expandem para um valor diferente de zero ou não.
+
+- Script com vários testes (REVISAR)
+
+```bash
+#!/bin/bash
+
+echo
+
+echo "Teste de \"0\""
+if [ 0 ]      # zero
+then
+  echo "0 eh falso."
+else          # Or else ...
+  echo "0 eh falso."
+fi            # 0 eh falso.
+
+echo
+
+echo "Teste de \"1\""
+if [ 1 ]      # um
+then
+  echo "1 eh falso."
+else
+  echo "1 eh falso."
+fi            # 1 eh falso.
+
+echo
+
+echo "Teste de \"-1\""
+if [ -1 ]     # menos um
+then
+  echo "-1 eh falso."
+else
+  echo "-1 eh falso."
+fi            # -1 eh falso.
+
+echo
+
+echo "Teste de \"NULL\""
+if [ ]        # NULL (condicao vazia)
+then
+  echo "NULL eh falso."
+else
+  echo "NULL eh falso."
+fi            # NULL eh falso.
+
+echo
+
+echo "Teste de \"xyz\""
+if [ xyz ]    # string
+then
+  echo "Random string eh falso."
+else
+  echo "Random string eh falso."
+fi            # Random string eh falso.
+
+echo
+
+echo "Teste de \"\$xyz\""
+if [ $xyz ]   # Testa se $xyz eh null, mas...
+              # eh apenas uma variavel não inicializada.
+then
+  echo "Variavel não inicializada eh falso."
+else
+  echo "Variavel não inicializada eh falso."
+fi            # Variavel não inicializada eh falso.
+
+echo
+
+echo "Teste de \"-n \$xyz\""
+if [ -n "$xyz" ]            # Mais pedantemente correto.
+then
+  echo "Variavel não inicializada eh falso."
+else
+  echo "Variavel não inicializada eh falso."
+fi            # Variavel não inicializada eh falso.
+
+echo
+
+
+xyz=          # não inicializada, mas set para null.
+
+echo "Teste de \"-n \$xyz\""
+if [ -n "$xyz" ]
+then
+  echo "Variavel Null eh falso."
+else
+  echo "Variavel Null eh falso."
+fi            # Variavel Null eh falso.
+
+
+echo
+
+
+# Quando "falso" eh falso?
+
+echo "Teste de \"falso\""
+if [ "falso" ]               #  Parece que "falso" eh apenas uma string ...
+then
+  echo "\"falso\" eh falso." #+ e ela testa para falso.
+else
+  echo "\"falso\" eh falso."
+fi            # "falso" eh falso.
+
+echo
+
+echo "Teste de \"\$falso\""  # De novo, variavel não inicializada.
+if [ "$falso" ]
+then
+  echo "\"\$falso\" eh falso."
+else
+  echo "\"\$falso\" eh falso."
+fi            # "$falso" eh falso.
+              # Agora, chegamos ao resultado esperado.
+
+echo
+
+exit 0
+```
+
+- Script com operadores de **comparação de inteiros**:
+
+```bash
+#!/bin/bash  
+# Comparação de inteiros
+a=4
+b=5
+# igual: -eq 
+if [ "$a" -eq "$b" ]; then echo 'a=b'; else echo 'a~=b'; fi
+
+# diferente: -ne
+if [ "$a" -ne "$b" ]; then echo 'a~=b'; else echo 'a=b'; fi
+
+# maior do que: -gt
+if [ "$a" -gt "$b" ]; then echo 'a>b'; else echo 'a<=b'; fi
+
+# maior do que ou igual a: -ge
+if [ "$a" -ge "$b" ]; then echo 'a>=b'; else echo 'a<b'; fi
+
+# menor do que: -lt
+if [ "$a" -lt "$b" ]; then echo 'a<b'; else echo 'a>=b'; fi
+
+# menor do que ou igual a: -le
+if [ "$a" -le "$b" ]; then echo 'a<=b'; else echo 'a>b'; fi
+
+# menor do que (entre parênteses duplos): <
+(("$a" < "$b")); echo $?
+
+# menor do que ou igual a (entre parênteses duplos): <=
+(("$a" <= "$b")); echo $?
+
+# maior do que (entre parênteses duplos): >
+(("$a" > "$b")); echo $?
+
+# maior do que ou igual a (entre parênteses duplos): >=
+(("$a" >= "$b")); echo $?
+```
+
+- Script com `if` aninhado: 
+
+```bash
+#!/bin/bash
+
+a=3
+
+if [ "$a" -gt 0 ]
+then
+  if [ "$a" -lt 5 ]
+  then
+    echo "O valor de \"a\" fica entre 0 e 5."
+  fi
+fi
+
+# Tem o mesmo resultado que:
+
+if [ "$a" -gt 0 ] && [ "$a" -lt 5 ]
+then
+  echo "O valor de \"a\" fica entre 0 e 5."
+fi
+```
+
+##### Laços 
+
+Em bash, um laço `for` é escrito como:
+
+```bash
+for arg in [list]
+do 
+ comando(s)... 
+done
+```
+- Exemplo de laço `for` com expansão: 
+
+```bash
+# expansão como lista
+for i in {0..9}
+do
+ echo $i;
+done
+```
+
+- Script com laço `for` e parâmetros:
+
+```bash
+#!/bin/bash
+
+fname="*txt"
+for f in $fname
+do
+ echo "Conteúdo de $f"
+ echo "---"
+ cat "$f"
+ echo
+done
+```
+
+##### Laço `while`
+
+Em bash, um laço `while` é escrito como: 
+
+```bash
+while [ condicao ]
+do 
+ comando(s)... 
+done
+```
+
+### Parte 4 
+
+Miscelânea. Guia de sobrevivência. 
+
+- Como obter ajuda de um comando: `info`, `help`, `man` e `apropos`
+
+```bash 
+# exemplo com 'ls'
+$ ls --help
+$ info ls
+$ man ls
+$ apropos ls
+```
+- Como fazer um login remoto simples usando `ssh`:
+
+```bash
+# ssh -v usuario@host
+# opção -v para 'verbose'. Exemplo:
+$ ssh -v peixoto@100.10.111.111
+```
+
+- Como fazer uma cópia remota de arquivo usado `scp`:
+
+```bash
+# scp -v local_file to@server:path
+# Exemplo: copia arquivo 'lamep.tar' para 
+# conta do LaMEP no server do CI
+$ scp -v lamep.tar l_lamep@ci.ufpb.br:~/site/
+```
+
+- Verificar conexão com servidor: 
+
+```bash
+# exemplo para o CI
+$ ping ci.ufpb.br
+```
+
+- Exemplo de aliases para `~/.bashrc`: 
+
+```bash
+alias op='open -a Paraview'
+alias l='ls -l'
+alias rmdat='find . -name "*.dat" -exec rm -rf {} \;'
+```
+
+- Verificar processos:
+
+```bash
+$ top
+```
+- Rede: 
+
+```bash
+$ ifconfig
+```
+
+- Versão completa do SO: 
+
+```bash
+$ uname -a
+```
+
+- Diferenciar arquivos: 
+
+```bash
+$ diff -w [file1] [file2] > [diffFile]
+```
+
+- Ping para vários hosts: 
+
+```bash
+# 0 a 24
+$ nmap -n -sP 10.0.0.0/24 
+```
+
+- Processos em background:
+
+```bash
+$ screen -S [name_of_background_screen]; 
+$ ctrl-a-d (escape screen mode); 
+$ ctrl-a-[ (enable scrollback mode)
+```
+
+- Encoding de arquivos:
+
+```bash
+$ file -I <filename>
+```
+
+- Executar Matlab em background:
+
+```bash
+$ matlab -nodesktop -nosplash
+```
+
+## TODO
+
+- [ ] Adicionar script com operadores de **comparação de strings**
+- [ ] Miscelânea: comando de espelhamento remoto com `sshfs`.
