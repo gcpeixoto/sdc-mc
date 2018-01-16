@@ -15,6 +15,18 @@
 $ echo $BASH_VERSION 
 ```
 
+- Verificar lista de shells disponíveis: 
+
+```bash
+$ cat /etc/shells
+/bin/bash 
+/bin/csh
+/bin/ksh
+/bin/sh
+/bin/tcsh
+/bin/zsh
+```
+
 - Acessar o diretório padrão:
 
 ```bash
@@ -85,6 +97,13 @@ $ /Users/gustavo/sdc-mc
 ```bash
 $ cd /; cd $sdc
 ```
+
+- Visitando `csv` e voltando para o topo do nosso diretório:
+
+```bash 
+$ cd csv; cd ..
+```
+
 
 - Visualizando o nosso histórico de comandos
 
@@ -238,58 +257,6 @@ $ echo 'O que é' ~ 'não é' ~root
 $ O que é /Users/gustavo não é /var/root
 ```
 
-*Obs.:* padrões complexos podem ser habilitados no bash com o comando de _extended blobs_: `shopt -s extglob`. Exemplo:
-
-```bash
-$ shopt -s extglob
-
-# lista qualquer arquivo começando por 'be' ou 'r'
-$ ls @(be|r)*
-$ bett rad
-```
-
-### Parte 2
-
-- Executar editor de texto, inserir o nome do aluno, salvar, fechar o editor, retornar ao `bash` e imprimir o conte˙do na tela. 
-  
-**Como fazer:**
-
-```bash
-# Depois de executar 'nano', realizar comandos com o teclado e sair
-# no macOS: 'Ctrl+O' (escrever); 'Ctrl+M' (formato); Ctrl+X (sair)
-$ cd ~/sdc-mc
-$ nano eusou.txt 
-$ cat eusou.txt
-$ Gustavo 
-```
-
-#### Entendo melhor a gramática do _bash_
-
-##### Comandos simples 
-
-Tipo mais comum. Especifica o nome do comando juntamente com um conjunto opcional de _argumentos_, _variáveis de ambiente_ e _redirecionamentos de descritores de arquivo_. 
-
-- Definir duas variáveis em `sdc-mc`:
-
-```bash 
-$ dat=./data/; mis=./misc/;
-
-# Para imprimir o conteúdo das variáveis, use '$'.
-# O uso de aspas duplas é fundamental aqui porque var{1,2}
-# está se expandindo
-$ echo "$dat $mis"
-```
-
-- Definir variável com base em entrada de usuário: 
-
-```bash
-# aguarda input do usuário e salva valor em 'name'
-$ read name 
-Hello 
-$ echo $name
-Hello
-```
-
 - Criar e deletar diretório vazio:
 
 ```bash
@@ -311,10 +278,119 @@ $ ditto misc misc2;
 
 **Obs.:** diferentemente de `cp -R`, com `ditto`, se um diretório de mesmo nome de destino já existir, o conteúdo existente será mesclado com o conteúdo do diretório que está sendo copiado.
 
+*Obs.:* padrões complexos podem ser habilitados no bash com o comando de _extended blobs_: `shopt -s extglob`. Exemplo:
+
+```bash
+$ shopt -s extglob
+
+# lista qualquer arquivo começando por 'be' ou 'r'
+$ ls @(be|r)*
+$ bett rad
+```
+
+### Parte 2
+
+- Executar editor de texto, inserir o nome do aluno, salvar, fechar o editor, retornar ao `bash` e imprimir o conteúdo na tela. 
+  
+
+```bash
+# Depois de executar 'nano', realizar comandos 
+# com o teclado e sair
+# no macOS: 
+# 'Ctrl+O' (escrever); 'Ctrl+M' (formato); Ctrl+X (sair)
+$ cd ~/sdc-mc
+$ nano eusou.txt 
+# faça operações no arquivo
+$ cat eusou.txt
+$ Gustavo 
+```
+
+#### Entendo melhor a gramática do _bash_
+
+##### Comandos simples 
+
+Tipo mais comum. Especifica o nome do comando juntamente com um conjunto opcional de _argumentos_, _variáveis de ambiente_ e _redirecionamentos de descritores de arquivo_. 
+
+- Encerrar sessão:
+
+```bash
+$ exit
+```
+- Iniciar nova sessão, verificar existência da variável `sdc` e redefini-la de modo permanente. 
+
+```bash 
+# A variável não está mais na lista
+$ env | grep sdc 
+
+# Recriando a variável de modo permanente
+$ cd ~/sdc-mc
+# no macOS
+
+# envia diretório atual para o arquivo oculto de opções 
+# `.bashrc` (explicar adiante a expansão de $PWD e o 
+# redirecionamento de append `>>`)
+$ echo "export sdc=$PWD" >> ~/.bashrc
+# verifica o acréscimo da informação na última linha
+$ tail -1 ~/.bashrc
+# faz 'include' e verifique na lista
+$ source ~/.bashrc ; env | grep sdc
+$ exit 
+
+# abra nova sessão e constate
+$ echo $sdc
+```
+
+**Obs.:** Neste exemplo, listamos as variáveis de ambiente do sistema com `env` e buscamos pelo padrão `sdc` com `grep`. A saída deve estar vazia, a princípio, vazia. Se desejarmos, podemos fazer `unset` para remover uma variável de ambiente da sessão e incluí-la novamente com `source ~/.bashrc`. 
+
+
+- Definir variável com base em entrada de usuário e removê-la: 
+
+```bash
+# aguarda input do usuário e salva valor em 'name'
+$ read name 
+Hello 
+$ echo $name
+Hello
+$ unset name
+```
+
+- Criar diretório para scripts e realizar teste lógico:
+
+```bash
+$ mkdir -p temp/sh; cd temp/sh
+$ touch s1
+# escrever código em no script s1
+
+# Retornará b = 0, pois 3 > 10 é falso
+:<<S1 
+a=3
+b=`expr $a \> 10`
+echo 'b=`expr $a \> 10`, therefore...'
+echo "If a > 10, b = 0 (false)"
+echo "b = $b"
+echo
+S1
+# Torna s1 executável
+$ chmod +x s1
+``` 
+
+**Obs.:** o comando `expr` é invocado para avaliar a operação lógica `$a \> 10`. Os sinais de crase disponibilizam a saída de `expr $a \> 10` para atribuição à variável `b`. A `\` é usada como função de escape em `expr` para que `>` seja interpretado como `maior do que`. O valor de `b` é retornado como `0`, isto é, o teste lógico é falso.
+
+- Obtendo parâmetros com `awk`
+
+```bash
+$ echo um dois | awk '{print $1}'
+$ echo um dois | awk '{print $2}'
+# campo #0 são todos! 
+$ echo um dois | awk '{print $0}'
+```
+**Obs.:** `awk` quebra cada linha de entrada passada em _campos_. Por padrão, um campo é uma sequencia de caracteres consecutivos delimitados por espaços em branco, embora existam opções para alterar isso. `awk` analisa e opera em cada campo separadamente. Comando ideal para manusear arquivos de texto estruturados - especialmente tabelas - dados organizados em partes consistentes, como linhas e colunas.
 
 ##### _Pipelines_ e redirecionamentos: `>`, `>>`, `<`, `|` e `tee`
 
-O operador `>` redireciona a saída de um comando para um arquivo no disco. Se o arquivo já existir, será apagado e substituído sem aviso (CUIDADO!)
+Redirecionamento é a prática de alterar a fonte ou destino de um descritor de arquivo.
+
+O operador `>` ("escreva para") redireciona a saída de um comando para um arquivo no disco. Se o arquivo já existir, será apagado e substituído sem aviso (CUIDADO!)
 
 - Direcionar a lista de processos em operação para arquivo `procs.txt`: 
 
@@ -337,7 +413,7 @@ $ cat ball > bett;
 $ cat bett
 texto
 ```
-O operador `<` lê a entrada de um comando a partir de um arquivo no disco e não do usuário. Atenção para não digitar `>` por engano, senão o conteúdo do arquivo que você está tentando ler será apagado.
+O operador `<` ("leia de") lê a entrada de um comando a partir de um arquivo no disco e não do usuário. Atenção para não digitar `>` por engano, senão o conteúdo do arquivo que você está tentando ler será apagado.
 
 
 O 'pipe' (`|`) conecta dois comandos vinculando a saída padrão do primeiro processo com a entrada padrão do segundo.
@@ -361,38 +437,92 @@ O comando `tee` cria uma espécie de "túnel", no sentido de redirecionar a saí
 $ ps -ax | tee misc/procs.txt | more
 ```
 
-### Parte 3
+##### Aliases 
 
-- Escrever um script básico: 
+- Vamos melhorar o nosso acesso ao diretório padrão criando um `alias` (atalho): 
 
-```bash 
-$ cd $sdc
-$ which bash > principal.sh
+```bash
+$ cd ~/sdc
+$ echo "alias sdc='cd $PWD'" >> ~/.bashrc
+```
 
-# abra principal.sh com 'nano' ou 'vim' e edite com script abaixo 
-# adicionar '!' na primeira linha 
+**Obs.:** agora temos um atalho que já nos levará diretamente para o nosso diretório padrão, pois embutimos o comando `cd` nele. A partir de agora a variável de ambiente `sdc` pode ser descartada. 
 
-#!/bin/bash
-echo -e "Olá, digite uma palavra: \c "
-read  palavra
-echo "A palavra digitada é: $palavra"
-echo -e "Poderia digitar mais duas palavras? "
-read palavra1 palavra2
-echo "OK, aqui estão: \"$palavra1\" \"$palavra2\""
-echo -e "O que você acha sobre bash scripting? "
-# le comando e armazena resposta na variável residente padrao $REPLY
-read
-echo "Você disse $REPLY, legal! "
-echo -e "Quais são suas cores favoritas ? "
-# -a permite que 'read' leia como array
-read -a colours
-echo "Minhas cores favoritas são ${cores[0]}, ${cores[1]} and ${cores[2]}:-)"
+##### Descritores de arquivos 
 
-# volte ao bash e torne o arquivo executável
-$ chmod +x principal.sh
+Descritores de arquivo servem para controlar os 'fluxos' de processos. Cada processo geralmente possui 3 descritores: 
 
-# execute o arquivo 
-$ ./principal.sh
+1. uma _entrada padrão_: teclado, (_file descriptor_ 0 ou FD0)
+2. uma _saída padrão_: tela, (_file descriptor_ 1 ou FD1)
+3. um _erro padrão_: tela, (_file descriptor_ 2 ou FD2)
+
+Vamos estudar os fluxos de um processo `ls` para entender como  manipulamos redirecionamentos.
+
+
+- Executar comando que produz mensagem na saída padrão: 
+
+```bash
+$ cd sdc; ls temp/bett temp/buch
+```
+
+**Obs.:** ambos os arquivos `bett` e `buch` estão no diretório, de modo que `ls` produz uma saída para a tela em FD1.
+
+- Executar comando que produz mensagem de erro padrão:
+
+```bash
+$ cd sdc; ls temp/but
+ls: temp/but: No such file or directory  
+```
+**Obs.:** neste caso, `but` não existe. Portanto, o processo `ls` produz uma mensagem de erro padrão na tela em FD2.
+
+- Executar comando que produz mensagens na saída padrão e erro
+
+```bash
+$ ls temp/bett temp/but
+temp/bett
+ls: temp/but: No such file or directory
+```
+**Obs.:** neste exemplo, o mesmo processo gera uma saída padrão e uma mensagem de erro, jogando fluxo tanto em FD1 quanto em FD2.
+
+- Enviar apenas a mensagem de erro padrão para o arquivo `temp/erro.log`
+
+```bash
+$ ls temp/bett temp/but 2>temp/erro.log
+$ cat temp/erro.log
+```
+
+**Obs.:** neste exemplo, a saída FD2 é enviada para o arquivo com o operador de redirecionamento `>` e apenas a saída FD1 é mostrada na tela.
+
+- Apensar a saída padrão e a mensagem de erro para o arquivo `temp/erro.log`
+
+```bash
+$ ls temp/bett temp/but >> temp/erro.log 2>&1
+$ cat temp/erro.log
+```
+
+**Obs.:* neste exemplo, a mensagem de erro em FD2 é apensada no arquivo e, posteriormente, o fluxo é passado para o descritor FD1, que, por sua vez, é também apensado no arquivo.
+
+- Apensar a saída padrão e a mensagem de erro para o arquivo `temp/erro.log` de modo mais conciso:
+
+```bash
+$ ls temp/bett temp/but &> temp/erro.log 
+$ cat temp/erro.log
+```
+
+**Obs.:* neste exemplo, a mensagem de erro em FD2 e a saída padrão em FD1 são ambas redirecionadas para o arquivo através do operador `&>`.
+
+##### Cópia de descritores de arquivos com `>&` e `<&`
+
+A expressão arbitrária `x >& y` significa que o FD `x` escreve no fluxo do FD `y`. Inversamente, a expressão arbitrária `x <& y` significa que o FD `x` lê o fluxo do FD `y`. Assim, a conexão  de um FD é copiada para a do outro. 
+
+##### _Here-strings_
+
+_Here-strings_ são usadas para que FD0 seja lida a partir de uma string. 
+
+- Criar `here-string`:
+
+```bash
+$ cat <<<"Bem, isso aqui em $PWD, é interessante."
 ```
 
 ##### Aspas e plicas 
@@ -421,3 +551,106 @@ $ Qual é a cotação de US$ para R$ hoje?
 ```
 
 **Regra de ouro:** se houver caracter de espaço em branco ou um símbolo em seu argumento, você deve usar as plicas ou aspas. Se não houver, elas são geralmente opcionais, mas você ainda pode uáa-las por segurança. Todavia, o uso de plicas ou aspas em _bash_ é quase indelével, já que são bastante usadas em argumentos.
+
+##### Heredocs 
+
+A tralha ou hashtag, `#` é usada para comentários em linha. Comentários em bloco são chamados _heredocs_ e podem ser iniciados por uma palavra-chave arbitrária e fechada pela mesma da seguinte maneira: 
+
+```bash 
+# Esta linha é um comentário 
+VAR=sdc-mc # outro comentário aqui
+
+# PALAVRA é usada como palavra-chave 
+# para o comentário em bloco 
+echo "imprime"
+:<<PALAVRA
+echo "isto"
+echo "aquilo"
+echo "não imprime"
+PALAVRA
+echo "imprime de novo"
+```
+
+**Obs.:** o operador `:` é um operador "neutro", ou "nulo". É bastante usado em estruturas de controle.
+
+##### `source`
+
+Este comando funciona como um "import" ou "include". Útil, por exemplo para reinicializar o arquivo de opções `.bashrc`.
+
+### Parte 3
+
+- Escrever um script básico: 
+
+```bash 
+$ sdc
+$ which bash > temp/sh/s0
+
+# abra principal com 'nano' ou 'vim' e edite com script abaixo 
+# adicionar '!' na primeira linha 
+
+#!/bin/bash
+echo -e "Olá, digite uma palavra: \c "
+read  palavra
+echo "A palavra digitada é: $palavra"
+echo -e "Poderia digitar mais duas palavras? "
+read palavra1 palavra2
+echo "OK, aqui estão: \"$palavra1\" \"$palavra2\""
+echo -e "O que você acha sobre bash scripting? "
+# le comando e armazena resposta na variável residente padrao $REPLY
+read
+echo "Você disse $REPLY, legal! "
+
+# volte ao bash e torne o arquivo executável
+$ chmod +x /temp/sh/s0
+
+# execute o arquivo com './'
+$ ./temp/sh/s0
+```
+
+**Obs.:** o cabeçalho de um shell script começa com um `#!` (_sha-bang_), seguido pelo caminho de um comando. Por exemplo, se os cabeçalhos abaixo fossem aplicados a `principal.sh`, gerariam diferentes saídas: 
+
+- Esta linha executa o script como deve ser:
+
+```bash
+#!/bin/bash
+```
+
+- Esta linha apenas imprime `./principal.sh`:
+
+```bash
+#!/bin/echo
+```
+
+- Esta linha imprime na tela o conteúdo do arquivo, inclusive os comentários:
+
+```bash
+#!/bin/cat
+```
+
+Opções também podem ser adicionadas na linha da `sha-bang`. 
+
+- A linha abaixo, por exemplo, permite que executemos o arquivo em modo de depuração - `debug mode`, i.e. opção `-x`:
+
+```bash
+#!/bin/bash -x
+```
+
+##### Condicionais 
+
+- Vamos criar um segundo script para ver o funcionamento de um condicional:
+
+```bash
+$ sdc; touch temp/sh/s2; nano s2
+$ read -p "Gostaria de café? [s/n] "
+# $REPLY
+> if [[ $REPLY = s ]]; then
+>   echo "Bora lá. :-) "
+> else
+>   echo "Toma aí... Só um cafezinho. :/"
+> fi
+# tornar arquivo executável
+$ chmod +x /temp/sh/s2
+$ bash /temp/sh/s2 # outra forma de executar, em vez de ./
+```
+
+**Obs.:** o operador `[[ ]]` é uma construção para testes lógicos, assim como `=` também tem o mesmo sentido conhecido.

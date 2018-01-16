@@ -1,0 +1,7 @@
+#!/bin/bash
+a=3
+b=`expr $a \> 10`
+echo 'b=`expr $a \> 10`, então...'
+echo "Se a > 10, b = 0 (falso)"
+echo "b = $b"            # 0  ( 3 ! -gt 10 )
+echo

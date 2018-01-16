@@ -1,0 +1,12 @@
+#!/bin/bash -x
+echo -e "Olá, digite uma palavra: \c "
+read  palavra
+echo "A palavra digitada é: $palavra"
+echo -e "Poderia digitar mais duas palavras? "
+read palavra1 palavra2
+echo "OK, aqui estão: \"$palavra1\" \"$palavra2\""
+echo -e "O que você acha sobre bash scripting? "
+# le comando e armazena resposta na variavel residente padrao $REPLY
+read
+echo "Você disse $REPLY, legal! "
+

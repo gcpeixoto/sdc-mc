@@ -1,0 +1,9 @@
+#!/bin/bash
+
+read -p "Gostaria de café? [s/n] "
+
+if [[ $REPLY = s ]]; then
+   echo "Bora lá. :-) "
+else
+   echo "Toma aí... Só um cafezinho. :/"
+fi
