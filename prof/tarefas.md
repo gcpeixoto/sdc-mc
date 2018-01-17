@@ -1184,9 +1184,6 @@ $ g++ <arquivo_fonte>
 $ gcc <arquivo_fonte> -o <arquivo_executável>
 ```
 
-
-
-
 ## TODO
 
 - [ ] Adicionar script com operadores de **comparação de strings**
