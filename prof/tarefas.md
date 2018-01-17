@@ -1149,6 +1149,41 @@ $ file -I <filename>
 $ matlab -nodesktop -nosplash
 ```
 
+- Instalar dependências de instalações anteriores no LINUX:
+
+```bash
+$ apt-get install -f
+```
+
+- Instalar pacotes `.deb` no LINUX:
+
+```bash
+$ dpkg -i <nome_pacote>
+```
+
+- Mostrar espaço livre em disco:
+
+```bash
+$ df
+```
+
+- Compilar arquivo básico em c:
+
+```bash
+$ sudo apt install gcc
+$ gcc <arquivo_fonte>
+# Desta forma o executável será gerado como a.out, para especificar o nome de saída utilizasse a flag -o:
+$ gcc <arquivo_fonte> -o <arquivo_executável>
+```
+- Compilar arquivo básico em c++:
+
+```bash
+$ sudo apt install g++
+$ g++ <arquivo_fonte>
+# Desta forma o executável será gerado como a.out, para especificar o nome de saída utilizasse a flag -o:
+$ g++ <arquivo_fonte> -o <arquivo_executável>
+```
+
 ## TODO
 
 - [ ] Adicionar script com operadores de **comparação de strings**
