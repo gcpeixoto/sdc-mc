@@ -1181,7 +1181,7 @@ $ gcc <arquivo_fonte> -o <arquivo_executável>
 $ sudo apt install g++
 $ g++ <arquivo_fonte>
 # Desta forma o executável será gerado como a.out, para especificar o nome de saída utilizasse a flag -o:
-$ gcc <arquivo_fonte> -o <arquivo_executável>
+$ g++ <arquivo_fonte> -o <arquivo_executável>
 ```
 
 ## TODO
